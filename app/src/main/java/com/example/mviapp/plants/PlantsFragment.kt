@@ -35,14 +35,14 @@ class PlantsFragment : Fragment() {
 
         initView()
         initObserver()
-        viewModel.viewCreated()
+        viewModel.refreshData()
     }
 
     private fun initView() {
         binding.apply {
             plantsListRecyclerView.adapter = plantsAdapter
             floatingActionButton.setOnClickListener {
-                viewModel.viewCreated()
+                viewModel.refreshData()
             }
         }
     }

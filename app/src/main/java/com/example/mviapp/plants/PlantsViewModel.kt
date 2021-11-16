@@ -2,12 +2,10 @@ package com.example.mviapp.plants
 
 import android.util.Log
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.mviapp.data.Plant
 import com.example.mviapp.data.PlantRepository
 import com.example.mviapp.utils.NonNullableMutableLiveData
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.addTo
@@ -41,10 +39,10 @@ class PlantsViewModel(
 
     private fun onAction(action: PlantsUIAction): Observable<PlantsViewState> {
         return when (action) {
-            PlantsUIAction.ViewCreated -> loadPlants()
+            PlantsUIAction.RefreshData -> loadPlants()
         }.onErrorResumeNext {
             Observable.fromCallable {
-                Log.e("TAG", "Manual pan entry transaction unknown error: $it")
+                Log.e("TAG", "Error: $it")
                 _state.value
             }
         }
@@ -55,8 +53,8 @@ class PlantsViewModel(
         return Observable.just(_state.value.copy(plants = plants))
     }
 
-    fun viewCreated() {
-        uiSubject.onNext(PlantsUIAction.ViewCreated)
+    fun refreshData() {
+        uiSubject.onNext(PlantsUIAction.RefreshData)
     }
 
     override fun onCleared() {
@@ -70,5 +68,5 @@ data class PlantsViewState(
 )
 
 sealed class PlantsUIAction {
-    object ViewCreated : PlantsUIAction()
+    object RefreshData : PlantsUIAction()
 }
