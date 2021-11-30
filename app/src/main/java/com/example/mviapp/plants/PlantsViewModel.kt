@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.example.mviapp.data.Plant
 import com.example.mviapp.data.PlantRepository
 import com.example.mviapp.utils.NonNullableMutableLiveData
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.addTo
@@ -25,10 +26,10 @@ class PlantsViewModel(
 
     init {
         uiSubject
+            .observeOn(Schedulers.io())
             .doOnNext { Log.d("TAG1", Thread.currentThread().name) }
             .concatMap(::onAction)
             .doOnNext { Log.d("TAG2", Thread.currentThread().name) }
-            .subscribeOn(Schedulers.io())
             .doOnNext { Log.d("TAG3", Thread.currentThread().name) }
             .subscribe(
                 { _state.postValue(it) },
@@ -38,8 +39,10 @@ class PlantsViewModel(
     }
 
     private fun onAction(action: PlantsUIAction): Observable<PlantsViewState> {
-        return when (action) {
-            PlantsUIAction.RefreshData -> loadPlants()
+        return Observable.fromCallable {
+            when (action) {
+                PlantsUIAction.RefreshData -> loadPlants()
+            }
         }.onErrorResumeNext {
             Observable.fromCallable {
                 Log.e("TAG", "Error: $it")
@@ -48,9 +51,9 @@ class PlantsViewModel(
         }
     }
 
-    private fun loadPlants(): Observable<PlantsViewState> {
+    private fun loadPlants(): PlantsViewState {
         val plants = plantRepository.getPlants()
-        return Observable.just(_state.value.copy(plants = plants))
+        return _state.value.copy(plants = plants)
     }
 
     fun refreshData() {
